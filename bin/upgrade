@@ -17,6 +17,7 @@ except ImportError:
 
 REDASH_HOME = os.environ.get('REDASH_HOME', '/opt/redash')
 CURRENT_VERSION_PATH = '{}/current'.format(REDASH_HOME)
+LOGS_DIR = '{}/logs'.format(CURRENT_VERSION_PATH)
 
 
 def run(cmd, cwd=None):
@@ -134,6 +135,11 @@ def update_requirements(version_name):
         run('sudo pip install -r {}'.format(new_requirements_file))
 
 
+def ensure_logpath_exists():
+    if not os.path.isdir(LOGS_DIR):
+        os.path.mkdir(LOGS_DIR)
+
+
 def apply_migrations(release):
     green("Running migrations (if needed)...")
     if not release.v1_or_newer():
@@ -227,6 +233,7 @@ def deploy_release(channel):
         update_requirements(release.version_name)
         apply_migrations(release)
         link_to_current(release.version_name)
+        ensure_logpath_exists()
         restart_services()
         green("Done! Enjoy.")
     except subprocess.CalledProcessError as e:
